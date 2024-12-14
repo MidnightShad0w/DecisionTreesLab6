@@ -50,7 +50,61 @@ def find_best_split(feature_vector, target_vector):
     """
     # ╰( ͡☉ ͜ʖ ͡☉ )つ──☆*:・ﾟ   ฅ^•ﻌ•^ฅ   ʕ•ᴥ•ʔ
 
-    pass
+    sort_idx = np.argsort(feature_vector)
+    x_sorted = feature_vector[sort_idx]
+    y_sorted = target_vector[sort_idx]
+
+    n = len(y_sorted)
+    if n == 0:
+        return np.array([]), np.array([]), None, None
+
+    unique_values = np.unique(x_sorted)
+
+    if len(unique_values) == 1:
+        return np.array([]), np.array([]), None, None
+
+    thresholds = (unique_values[:-1] + unique_values[1:]) / 2
+
+    cum_ones = np.cumsum(y_sorted)
+
+    total_ones = cum_ones[-1]
+    # total_zeros = n - total_ones
+
+    ginis = []
+
+    for t in thresholds:
+        idx = np.searchsorted(x_sorted, t, side='right')
+
+        left_ones = cum_ones[idx - 1] if idx > 0 else 0
+        # left_zeros = idx - left_ones
+
+        right_ones = total_ones - left_ones
+        # right_zeros = total_zeros - left_zeros
+
+        if idx == 0 or idx == n:
+            ginis.append(np.inf)
+            continue
+
+        def gini_impurity(ones_count, total_count):
+            p1 = ones_count / total_count
+            return 1 - p1 ** 2 - (1 - p1) ** 2
+
+        left_H = gini_impurity(left_ones, idx)
+        right_H = gini_impurity(right_ones, n - idx)
+
+        G = (idx / n) * left_H + ((n - idx) / n) * right_H
+        ginis.append(G)
+
+    ginis = np.array(ginis)
+
+    if len(ginis) == 0:
+        return np.array([]), np.array([]), None, None
+
+    min_idx = np.argmin(ginis)
+    gini_best = ginis[min_idx]
+    threshold_best = thresholds[min_idx]
+
+    return thresholds, ginis, threshold_best, gini_best
 
 
 class DecisionTree:
