@@ -243,7 +243,7 @@ class DecisionTree:
                 else:
                     return self._predict_node(x, node["right_child"])
             else:
-                raise ValueError("Invalid node structure")
+                raise ValueError("Неверная структура узла")
 
     def fit(self, X, y):
         self._fit_node(X, y, self._tree)
