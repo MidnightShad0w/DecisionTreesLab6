@@ -140,6 +140,9 @@ class DecisionTree:
             Узел дерева, который будет заполнен информацией о разбиении.
 
         """
+
+        sub_X, sub_y = np.array(sub_X), np.array(sub_y)
+
         if np.all(sub_y == sub_y[0]):
             node["type"] = "terminal"
             node["class"] = sub_y[0]
@@ -171,7 +174,7 @@ class DecisionTree:
 
             _, _, threshold, gini = find_best_split(feature_vector, sub_y)
 
-            if gini_best is None or gini > gini_best:
+            if gini_best is None or gini < gini_best: # тут заменил > на < тк в реализации find_best_split я минимизировал Gini
                 feature_best = feature
                 gini_best = gini
                 split = feature_vector < threshold
@@ -222,7 +225,25 @@ class DecisionTree:
             Предсказанный класс объекта.
         """
         # ╰( ͡☉ ͜ʖ ͡☉ )つ──☆*:・ﾟ   ฅ^•ﻌ•^ฅ   ʕ•ᴥ•ʔ
-        pass
+        x = np.array(x)
+        if node["type"] == "terminal":
+            return node["class"]
+        else:
+            feature_split = node["feature_split"]
+            if "threshold" in node:
+                threshold = node["threshold"]
+                if x[feature_split] < threshold:
+                    return self._predict_node(x, node["left_child"])
+                else:
+                    return self._predict_node(x, node["right_child"])
+            elif "categories_split" in node:
+                categories_split = node["categories_split"]
+                if x[feature_split] in categories_split:
+                    return self._predict_node(x, node["left_child"])
+                else:
+                    return self._predict_node(x, node["right_child"])
+            else:
+                raise ValueError("Invalid node structure")
 
     def fit(self, X, y):
         self._fit_node(X, y, self._tree)
